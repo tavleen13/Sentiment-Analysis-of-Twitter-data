@@ -8,6 +8,7 @@ from nltk.classify import NaiveBayesClassifier
 from nltk.metrics import BigramAssocMeasures
 from nltk.metrics.scores import precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
+from nltk.corpus import stopwords
 import math
 
 emoticons_str = r"""
@@ -48,25 +49,29 @@ class DataCleaning:
     	return tokens_re.findall(s)
 
 
-    def preprocess(self, some_list, lowercase=False):
+    def preprocess(self, some_list, tag, lowercase=False):
         
         output_list = []
         for s in self.some_list:
         	
         	tokens = self.tokenize(s)
-        	
 
         	for token in tokens:
+        		
 
         		output_dict = {}
+        		
+        		# token = filter(lambda x: x not in stopwords.words(), token)
+        		# token = token.encode('utf-8')
 
         		if token.encode('utf-8').startswith('@') or len(token.encode('utf-8'))<=3 or token.encode('utf-8').startswith('http'):
         			continue
         		else:
-
            		    output_dict[token.encode('utf-8').lower()]= ''
-           		    values = (output_dict,) + ('positive',)
+           		    values = (output_dict,) + (tag,)
            		    output_list.append(values)
+
+
 
         return output_list
 
@@ -96,25 +101,25 @@ regular_tweets_list  = twitter_samples.open(files[2]).readlines()
 
 #--------Read all positive and negative words-------------
 
-positive_words = []
-negative_words = []
+# positive_words = []
+# negative_words = []
 
-reg = re.compile(r'\n')
+# reg = re.compile(r'\n')
 
-with open('positive-words.txt', 'r') as fp:
-	words = fp.readlines()
+# with open('positive-words.txt', 'r') as fp:
+# 	words = fp.readlines()
 
-	for word in words:
-		word = reg.sub('',word)
-		positive_words.append(word)
+# 	for word in words:
+# 		word = reg.sub('',word)
+# 		positive_words.append(word)
 
 
-with open('negative-words.txt') as fn:
-	words = fn.readlines()
+# with open('negative-words.txt') as fn:
+# 	words = fn.readlines()
 
-	for word in words:
-		word = reg.sub('',word)
-		negative_words.append(word)
+# 	for word in words:
+# 		word = reg.sub('',word)
+# 		negative_words.append(word)
 
 #---------------------tweets in json--------------------------------
 
@@ -124,17 +129,19 @@ negative_tweets = tweets_in_json(negative_tweets_list)
 
 dataCleanerPos = DataCleaning(positive_tweets)
 dataCleanerNeg = DataCleaning(negative_tweets)
-print 'length of positive tweets list', len(positive_tweets)
-print 'length of negative tweets list', len(negative_tweets)
+# print 'length of positive tweets list', len(positive_tweets)
+# print 'length of negative tweets list', len(negative_tweets)
 
 
 preprocess_pos_tweets = []
 preprocess_neg_tweets = []
 
-preprocess_pos_tweets = dataCleanerPos.preprocess(positive_tweets)
-preprocess_neg_tweets = dataCleanerNeg.preprocess(negative_tweets)
+preprocess_pos_tweets = dataCleanerPos.preprocess(positive_tweets, 'positive')
+preprocess_neg_tweets = dataCleanerNeg.preprocess(negative_tweets, 'negative')
+# print preprocess_neg_tweets
 
 #------------------------not required now -------------------------------------
+# dataCleaner = DataCleaning()
 # for tweets in positive_tweets:
 	
 # 	tweets = dataCleaner.preprocess(tweets)
@@ -150,28 +157,28 @@ preprocess_neg_tweets = dataCleanerNeg.preprocess(negative_tweets)
 
 #------------------check if in positive or negative word list-------------------
 
-for tweets in preprocess_pos_tweets:
-	for words in tweets[0]:
+# for tweets in preprocess_pos_tweets:
+# 	for words in tweets[0]:
 		
-		if words in positive_words:
-			tweets[0][words] = True
+# 		if words in positive_words:
+# 			tweets[0][words] = True
 		
-		else:
-			tweets[0][words] = False
+# 		else:
+# 			tweets[0][words] = False
 
 
-for tweets in preprocess_neg_tweets:
-	for words in tweets[0]:
+# for tweets in preprocess_neg_tweets:
+# 	for words in tweets[0]:
 	
-		if words in negative_words:
-			tweets[0][words] = True
+# 		if words in negative_words:
+# 			tweets[0][words] = True
 	
-		else:
-			tweets[0][words] = False
+# 		else:0
+# 			tweets[0][words] = False
 
-#-----------------------------classifier-------------------------------------------
+# #-----------------------------classifier-------------------------------------------
 
-print preprocess_pos_tweets
+# print preprocess_pos_tweets
 
 posTweets = int(math.floor(len(preprocess_pos_tweets)*3/4))
 negTweets = int(math.floor(len(preprocess_neg_tweets)*3/4))
